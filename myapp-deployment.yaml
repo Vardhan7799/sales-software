@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billingapp-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: billingapp
+  template:
+    metadata:
+      labels:
+        app: billingapp
+    spec:
+      containers:
+        - name: billingapp-container
+          image: billingapp:1.0
+          env:
+            - name: db.host
+              valueFrom:
+                configMapKeyRef:
+                  name: app-configmap
+                  key: db_host
+            - name: db.port
+              value: "3310"
+            - name: db.name
+              valueFrom:
+                configMapKeyRef:
+                  name: app-configmap
+                  key: db_name
+            - name: db.username
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_username
+            - name: db.password
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_password
+            - name: aws.access.key
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: aws_access_key
+            - name: aws.secret.key
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: aws_secret_key
+            - name: razorpay.key.id
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: razorpay_key_id
+            - name: razorpay.key.secret
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: razorpay_key_secret
+          ports:
+            - containerPort: 8080 # port on which container runs in cluster.
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billingapp-service
+spec:
+  selector:
+    app: billingapp #linked to pod by matching the labels
+  ports:
+    - port: 80
+    - targetPort: 8080 #Links the service to the pod
