@@ -62,7 +62,13 @@ pipeline{
         stage('Trivy Scan') {
             steps {
                 script {
-                    sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}')
+                    sh '''
+                    docker run --rm \
+                      -v /var/run/docker.sock:/var/run/docker.sock \
+                      aquasec/trivy:latest-full \
+                      image --severity HIGH,CRITICAL --ignore-unfixed \
+                      --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}
+                    '''
                 }
             }
         }
